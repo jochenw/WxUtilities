@@ -1,2 +1,2 @@
 # WxUtilities
-Utility packages for the webMethid IS server
+Utility packages for the webMethods IS server
