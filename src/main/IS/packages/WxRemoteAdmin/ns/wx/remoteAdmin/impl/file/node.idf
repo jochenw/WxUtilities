@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Values version="2.0">
+  <value name="node_type">interface</value>
+  <value name="node_subtype">unknown</value>
+  <value name="node_nsName">wx.remoteAdmin.impl.file</value>
+  <value name="is_public">false</value>
+  <value name="shared">cHJpdmF0ZSBzdGF0aWMgY2xhc3MgUmVtb3RlRmlsZSB7Cglwcml2YXRlIGZpbmFsIFN0cmluZyBw
+YXRoOwoJcHJpdmF0ZSBmaW5hbCBMb2NhbERhdGVUaW1lIGRhdGVUaW1lOwoJcHVibGljIFJlbW90
+ZUZpbGUoU3RyaW5nIHBQYXRoLCBMb2NhbERhdGVUaW1lIHBEYXRlVGltZSkgewoJCXBhdGggPSBw
+UGF0aDsKCQlkYXRlVGltZSA9IHBEYXRlVGltZTsKCX0KCXB1YmxpYyBTdHJpbmcgZ2V0UGF0aCgp
+IHsgcmV0dXJuIHBhdGg7IH0KCXB1YmxpYyBMb2NhbERhdGVUaW1lIGdldERhdGVUaW1lKCkgeyBy
+ZXR1cm4gZGF0ZVRpbWU7IH0KfQoKcHJpdmF0ZSBzdGF0aWMgU3RyaW5nIHJlcXVpcmVQYXJhbWV0
+ZXIoSURhdGFNYXAgcE1hcCwgU3RyaW5nIHBQYXJhbWV0ZXIpIHsKCWZpbmFsIFN0cmluZyB2YWx1
+ZSA9IHBNYXAuZ2V0QXNTdHJpbmcocFBhcmFtZXRlcik7CglpZiAodmFsdWUgPT0gbnVsbCkgewoJ
+CXRocm93IG5ldyBOdWxsUG9pbnRlckV4Y2VwdGlvbigiTWlzc2luZyBwYXJhbWV0ZXI6ICIgKyBw
+UGFyYW1ldGVyKTsKCX0KCWlmICh2YWx1ZS5sZW5ndGgoKSA9PSAwKSB7CgkJdGhyb3cgbmV3IEls
+bGVnYWxBcmd1bWVudEV4Y2VwdGlvbigiRW1wdHkgcGFyYW1ldGVyOiAiICsgcFBhcmFtZXRlcik7
+Cgl9CglyZXR1cm4gdmFsdWU7Cn0KcHJpdmF0ZSBzdGF0aWMgYm9vbGVhbiBpc0luRGlyZWN0b3J5
+KFBhdGggcERpciwgUGF0aCBwRmlsZSkgewoJZmluYWwgUGF0aCBkaXIgPSBwRGlyLnRvQWJzb2x1
+dGVQYXRoKCk7CglQYXRoIGZpbGUgPSBwRmlsZS50b0Fic29sdXRlUGF0aCgpOwoJd2hpbGUgKGZp
+bGUgIT0gbnVsbCkgewoJCWlmIChkaXIuZXF1YWxzKGZpbGUpKSB7CgkJCXJldHVybiB0cnVlOwoJ
+CX0gZWxzZSB7CgkJCWZpbGUgPSBmaWxlLmdldFBhcmVudCgpOwoJCX0KCX0KCXJldHVybiBmYWxz
+ZTsKfQoJ</value>
+  <value name="encodeutf8">true</value>
+  <value name="extends"></value>
+  <array name="implements" type="value" depth="1">
+  </array>
+  <array name="imports" type="value" depth="1">
+    <value>com.wm.util.ServerException</value>
+    <value>java.io.ByteArrayInputStream</value>
+    <value>java.io.ByteArrayOutputStream</value>
+    <value>java.io.IOException</value>
+    <value>java.io.InputStream</value>
+    <value>java.io.OutputStream</value>
+    <value>java.io.UncheckedIOException</value>
+    <value>java.nio.file.FileVisitResult</value>
+    <value>java.nio.file.FileVisitor</value>
+    <value>java.nio.file.Files</value>
+    <value>java.nio.file.Path</value>
+    <value>java.nio.file.Paths</value>
+    <value>java.nio.file.SimpleFileVisitor</value>
+    <value>java.nio.file.attribute.BasicFileAttributes</value>
+    <value>java.nio.file.attribute.FileTime</value>
+    <value>java.time.LocalDateTime</value>
+    <value>java.time.ZoneId</value>
+    <value>java.time.format.DateTimeFormatter</value>
+    <value>java.util.ArrayList</value>
+    <value>java.util.Comparator</value>
+    <value>java.util.List</value>
+    <value>java.util.function.BiConsumer</value>
+    <value>java.util.function.BiFunction</value>
+    <value>java.util.function.BinaryOperator</value>
+    <value>java.util.function.IntConsumer</value>
+    <value>java.util.function.IntFunction</value>
+    <value>java.util.function.Supplier</value>
+    <value>java.util.zip.ZipEntry</value>
+    <value>java.util.zip.ZipOutputStream</value>
+    <value>com.softwareag.util.IDataMap</value>
+  </array>
+</Values>
