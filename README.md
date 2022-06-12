@@ -1,5 +1,5 @@
 # WxUtilities
 
-| Name          | Desciption                    |
+| Name          | Description                   |
 | ------------  | ----------------------------- |
 | WxRemoteAdmin | Helper for remote development |
