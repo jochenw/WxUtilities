@@ -17,10 +17,9 @@ public class LoggerRegistry {
 				return pMetaData;
 			});
 			final IBackend backend = backendRegistry.requireBackend(pMetaData.getBackendId());
-			return backend.create(loggerId, pMetaData);
+			return backend.create(pMetaData);
 		});
 	}
-	public ILogger.MetaData getMetaData()
 
 	public ILogger get(String pLoggerId) {
 		return loggers.get(pLoggerId);

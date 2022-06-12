@@ -5,11 +5,27 @@ import com.github.jochenw.afw.core.util.NotImplementedException;
 import wx.utilities.log.api.IBackend;
 import wx.utilities.log.api.ILogger;
 import wx.utilities.log.api.ILogger.Level;
+import wx.utilities.log.api.ILogger.MetaData;
+import wx.utilities.log.backend.IFormatter;
 
 public class SimpleBackend implements IBackend {
 	@Override
-	public ILogger create(String pId, Level pLevel) {
-		throw new NotImplementedException();
+	public ILogger create(MetaData pMetaData) {
+	    final SimpleLogger sl = new SimpleLogger();
+	    sl.setMetaData(pMetaData);
+	    return sl;
+	}
+
+	@Override
+	public void reconfigure(ILogger pLogger, MetaData pMetaData) {
+		final SimpleLogger simpleLogger = (SimpleLogger) pLogger;
+		simpleLogger.setMetaData(pMetaData);
+	}
+
+	@Override
+	public IFormatter create(String pPattern) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
