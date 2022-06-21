@@ -3,7 +3,6 @@ package wx.utilities.log.backend.simple;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -18,10 +17,14 @@ import wx.utilities.log.backend.LogEvent;
 
 
 public class SimpleLogger implements ILogger {
-	private MetaData metaData;
+	private final MetaData metaData;
 	private IFormatter formatter;
 	private OutputStream out;
 	private long size;
+
+	public SimpleLogger(MetaData pMetaData) {
+		metaData = pMetaData;
+	}
 
 	@Override
 	public synchronized MetaData getMetaData() {

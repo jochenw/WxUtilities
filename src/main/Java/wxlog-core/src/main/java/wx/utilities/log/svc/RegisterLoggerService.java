@@ -58,7 +58,9 @@ public class RegisterLoggerService extends AbstractIsService {
 		} else {
 			pattern = patternStr;
 		}
-		WxLogController.registerLogger(loggerId, packageId, backendId, level, path, pattern);
+		final WxLogController wxLogController = WxLogApplication.getInstance().getComponentFactory().requireInstance(WxLogController.class);
+		wxLogController.registerLogger(loggerId, packageId, backendId, level, path, pattern);
+		return super.voidResult();
 	}
 	
 }

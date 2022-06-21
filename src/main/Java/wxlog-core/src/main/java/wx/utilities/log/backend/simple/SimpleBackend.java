@@ -11,15 +11,8 @@ import wx.utilities.log.backend.IFormatter;
 public class SimpleBackend implements IBackend {
 	@Override
 	public ILogger create(MetaData pMetaData) {
-	    final SimpleLogger sl = new SimpleLogger();
-	    sl.setMetaData(pMetaData);
+	    final SimpleLogger sl = new SimpleLogger(pMetaData);
 	    return sl;
-	}
-
-	@Override
-	public void reconfigure(ILogger pLogger, MetaData pMetaData) {
-		final SimpleLogger simpleLogger = (SimpleLogger) pLogger;
-		simpleLogger.setMetaData(pMetaData);
 	}
 
 	@Override

@@ -10,10 +10,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 
-import com.github.jochenw.afw.core.inject.Types.Type;
 import com.github.jochenw.afw.core.util.Objects;
 import com.github.jochenw.afw.di.api.ComponentFactoryBuilder;
 import com.github.jochenw.afw.di.api.IComponentFactory;
+import com.github.jochenw.afw.di.api.Types.Type;
 
 import wx.utilities.log.api.IBackend;
 import wx.utilities.log.api.ILogger;
@@ -27,12 +27,6 @@ public class DbBackend implements IBackend {
 	@Override
 	public ILogger create(MetaData pMetaData) {
 		return new DbLogger(pMetaData, dbConnectionProvider, tableName);
-	}
-
-	@Override
-	public void reconfigure(ILogger pLogger, MetaData mdNew) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override

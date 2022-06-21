@@ -6,6 +6,5 @@ import wx.utilities.log.backend.IFormatter;
 
 public interface IBackend {
 	public ILogger create(MetaData pMetaData);
-	public void reconfigure(ILogger pLogger, MetaData mdNew);
 	public IFormatter create(String pPattern);
 }

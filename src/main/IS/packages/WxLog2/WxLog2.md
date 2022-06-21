@@ -33,5 +33,5 @@ to users of the WxLog2 package. These services are divided into a set of folders
 | error       |wx.log2.pub.error  | A few services, which are logging exceptions, and related error information. |
 
 
-#include "/ns/wx/log2/pub/plain/folder.md"
+#include "./ns/wx/log2/pub/plain/folder.md"
 

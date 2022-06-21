@@ -1,0 +1,43 @@
+<project name="WxUtilities" default="dist">
+	<property file="project.properties"/>
+	<property name="maven.exe" value="mvn"/>
+    <property name="jar.afw.core.version" value="0.6.0-SNAPSHOT"/>
+    <property name="jar.afw.di.version" value="0.6.0-SNAPSHOT"/>
+    <property name="jar.javax.inject.version" value="1"/>
+
+	<target name="clean">
+        <exec dir="src/main/Java/is-build-tools" executable="${maven.exe}">
+            <arg value="clean"/>
+        </exec>
+        <exec dir="src/main/Java/wxlog-core" executable="${maven.exe}">
+            <arg value="clean"/>
+        </exec>
+	</target>
+
+	<target name="build">
+		<echo>Building Java Libraries...</echo>
+        <exec dir="src/main/Java/is-build-tools" executable="${maven.exe}"/>
+        <exec dir="src/main/Java/wxlog-core" executable="${maven.exe}"/>
+		<echo>Building Documentation...</echo>
+		<mkdir dir="src/main/IS/WxLog2/pub"/>
+		<delete file="src/main/IS/WxLog2/pub/docs.md"/>
+		<java classname="com.github.jochenw.wxutils.isbuildtools.md.Main">
+			<classpath>
+				<fileset dir="src/main/Java/is-build-tools/target">
+					<include name="*.jar"/>
+				</fileset>
+                <pathelement location="${maven.localRepo}/com/github/jochenw/afw/afw-core/${jar.afw.core.version}/afw-core-${jar.afw.core.version}.jar"/>
+                <pathelement location="${maven.localRepo}/com/github/jochenw/afw/afw-di/${jar.afw.di.version}/afw-di-${jar.afw.di.version}.jar"/>
+                <pathelement location="${maven.localRepo}/javax/inject/javax.inject/${jar.javax.inject.version}/javax.inject-${jar.javax.inject.version}.jar"/>
+			</classpath>
+			<arg value="-inputFile"/>
+			<arg file="src/main/IS/packages/WxLog2/WxLog2.md"/>
+			<arg value="-baseDir"/>
+			<arg file="src/main/IS/packages/WxLog2"/>
+			<arg value="-outputFile"/>
+			<arg file="src/main/IS/WxLog2/pub/docs.md"/>
+		</java>
+	</target>
+
+    <target name="dist" depends="clean,build"/>
+</project>
