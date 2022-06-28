@@ -1,9 +1,11 @@
 <project name="WxUtilities" default="dist">
 	<property file="project.properties"/>
-	<property name="maven.exe" value="mvn"/>
+    <property name="maven.exe" value="mvn"/>
+    <property name="docker.exe" value="docker"/>
     <property name="jar.afw.core.version" value="0.6.0-SNAPSHOT"/>
     <property name="jar.afw.di.version" value="0.6.0-SNAPSHOT"/>
     <property name="jar.javax.inject.version" value="1"/>
+	<property name="docker.image.name" value="wxutilities-pandoc:latest"/>
 
 	<target name="clean">
         <exec dir="src/main/Java/is-build-tools" executable="${maven.exe}">
@@ -14,10 +16,33 @@
         </exec>
 	</target>
 
-	<target name="build">
-		<echo>Building Java Libraries...</echo>
+	<target name="build.java.libraries">
+        <echo>Building Java Libraries...</echo>
         <exec dir="src/main/Java/is-build-tools" executable="${maven.exe}"/>
         <exec dir="src/main/Java/wxlog-core" executable="${maven.exe}"/>
+	</target>
+
+	<target name="build.docker.image">
+		<echo>Building Docker Image for PDF Generation</echo>
+		<!-- Actual image build -->
+		<exec executable="${docker.exe}">
+			<arg value="build"/>
+			<arg file="src/main/Docker"/>
+			<arg value="--tag"/>
+			<arg value="${docker.image.name}"/>
+		</exec>
+		<!-- Start the container once, and stop it. In what follows, we can assume, that the container exists. -->
+        <echo>docker container run ${docker.image.name} bash</echo>
+        <exec executable="${docker.exe}" outputproperty="docker.container.id">
+            <arg value="container"/>
+            <arg value="run"/>
+            <arg value="${docker.image.name}"/>
+            <arg value="bash"/>
+        </exec>
+	</target>
+
+	
+	<target name="build" depends="build.java.libraries,build.docker.image">
 		<echo>Building Documentation...</echo>
 		<mkdir dir="src/main/IS/WxLog2/pub"/>
 		<delete file="src/main/IS/WxLog2/pub/docs.md"/>
@@ -37,6 +62,32 @@
 			<arg value="-outputFile"/>
 			<arg file="src/main/IS/WxLog2/pub/docs.md"/>
 		</java>
+		<echo>docker container cp src/main/IS/WxLog2/pub/docs.md ${docker.container.id}:/tmp/docs.md</echo>
+        <exec executable="${docker.exe}" logerror="true">
+            <arg value="container"/>
+            <arg value="cp"/>
+            <arg file="src/main/IS/WxLog2/pub/docs.md"/>
+            <arg value="${docker.container.id}:/tmp/docs.md"/>
+        </exec>
+        <echo>docker container run ${docker.container.id} pandoc -s -o /tmp/docs.pdf /tmp/docs.md</echo>
+        <exec executable="${docker.exe}" logerror="true">
+            <arg value="container"/>
+            <arg value="run"/>
+            <arg value="${docker.container.id}"/>
+            <arg value="pandoc"/>
+            <arg value="-s"/>
+            <arg value="-o"/>
+            <arg value="/tmp/docs.pdf"/>
+            <arg value="/tmp/docs.md"/>
+        </exec>
+		<mkdir dir="target/src/main/IS/WxLog2/pub"/>
+        <echo>docker container cp ${docker.container.id}:/tmp/docs.pdf target/src/main/IS/WxLog2/pub/docs.md</echo>
+        <exec executable="${docker.exe}" logerror="true">
+            <arg value="container"/>
+            <arg value="cp"/>
+            <arg value="${docker.container.id}:/tmp/docs.pdf"/>
+            <arg file="target/src/main/IS/WxLog2/pub/docs.md"/>
+        </exec>
 	</target>
 
     <target name="dist" depends="clean,build"/>

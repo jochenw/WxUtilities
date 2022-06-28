@@ -1,4 +1,6 @@
 # Location of the Maven executable
 maven.exe=c:/opt/apache-maven-3.8.5/bin/mvn.cmd
+# Location of the Docker executable
+docker.exe="c:/Users/jwi/AppData/Local/Programs/Rancher Desktop/resources/resources/win32/bin/docker.exe"
 # Path of the local Maven repository, typically $HOME/.m2/repository
 maven.localRepo=c:/Users/jwi/.m2/repository
