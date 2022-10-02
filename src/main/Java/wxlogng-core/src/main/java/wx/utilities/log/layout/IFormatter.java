@@ -1,6 +1,7 @@
 package wx.utilities.log.layout;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+
 
 public interface IFormatter {
 	public interface ILogEvent {
@@ -12,7 +13,7 @@ public interface IFormatter {
 		String getLevel();
 		String getThreadId();
 		String getMessageId();
-		LocalDateTime getDateTime();
+		ZonedDateTime getDateTime();
 	}
 
 	public void format(StringBuilder pSb, ILogEvent pLogEvent);
