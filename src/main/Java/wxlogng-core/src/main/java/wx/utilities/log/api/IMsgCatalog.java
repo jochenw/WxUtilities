@@ -2,14 +2,12 @@ package wx.utilities.log.api;
 
 import java.util.function.Consumer;
 
-import wx.utilities.log.api.ILogger.Level;
-
 
 public interface IMsgCatalog {
 	public interface IMsg {
 		public String getId();
 		public String getMsgId();
-		public Level getLevel();
+		public String getLevel();
 	}
 	public interface IMsgList {
 		public String getId();

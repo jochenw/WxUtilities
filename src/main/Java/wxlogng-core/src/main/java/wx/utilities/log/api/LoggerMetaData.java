@@ -1,7 +1,5 @@
 package wx.utilities.log.api;
 
-import wx.utilities.log.api.ILogger.Level;
-
 public class LoggerMetaData {
 	private final String loggerId;
 	private final String packageId;
