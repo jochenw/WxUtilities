@@ -24,6 +24,7 @@ public class LogService extends AbstractWxLogNgService {
 		final Level level = Level.valueOf(levelStr.toLowerCase());
 		final ZonedDateTime zdt = ZonedDateTime.now();
 		final ILogEvent event = new ILogEvent() {
+			private Object ctx;
 			@Override
 			public String getLoggerId() { return loggerId; }
 			@Override
@@ -35,17 +36,32 @@ public class LogService extends AbstractWxLogNgService {
 			@Override
 			public String getPackageId() {
 				return Strings.notEmpty(Data.getString(pInput, "packageId"),
-						                isEnv::getCallingPackageName);
+						                () -> {
+				   if (ctx == null) {
+					   ctx = isEnv.getContext();
+				   }
+				   return isEnv.getCallingPackageName(ctx);
+				});
 			}
 			@Override
 			public String getServiceId() {
 				return Strings.notEmpty(Data.getString(pInput, "serviceId"),
-		                isEnv::getCallingServiceId);
+		                () -> {
+		            if (ctx == null) {
+		            	ctx = isEnv.getContext();
+		            }
+		            return isEnv.getCallingServiceId(ctx);
+		        });
 			}
 			@Override
 			public String getQServiceId() {
-				return Strings.notEmpty(Data.getString(pInput, "serviceQId"),
-		                isEnv::getCallingServiceQId);
+				return Strings.notEmpty(Data.getString(pInput, "serviceId"),
+		                () -> {
+		            if (ctx == null) {
+		            	ctx = isEnv.getContext();
+		            }
+		            return isEnv.getCallingQServiceId(ctx);
+		        });
 			}
 			@Override
 			public String getThreadId() {

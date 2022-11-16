@@ -1,7 +1,8 @@
 package wx.logng.svc;
 
 public interface IIsEnvironment {
-	public String getCallingPackageName();
-	public String getCallingServiceId();
-	public String getCallingServiceQId();
+	public Object getContext();
+	public String getCallingPackageName(Object pCtx);
+	public String getCallingQServiceId(Object pCtx);
+	public String getCallingServiceId(Object pCtx);
 }
