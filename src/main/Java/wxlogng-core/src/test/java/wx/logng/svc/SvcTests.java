@@ -1,5 +1,10 @@
 package wx.logng.svc;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.function.Supplier;
+
+import com.github.jochenw.afw.core.util.NotImplementedException;
 import com.github.jochenw.afw.di.api.Module;
 
 public class SvcTests {
@@ -25,6 +30,16 @@ public class SvcTests {
 				@Override
 				public String getCallingServiceId(Object pCtx) {
 					return "mockService";
+				}
+
+				@Override
+				public Supplier<InputStream> findFile(String pUri) {
+					throw new NotImplementedException();
+				}
+
+				@Override
+				public OutputStream createFile(String string) {
+					throw new NotImplementedException();
 				}
 			});
 		};

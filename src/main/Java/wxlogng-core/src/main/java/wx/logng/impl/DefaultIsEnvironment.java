@@ -1,7 +1,16 @@
 package wx.logng.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Stack;
+import java.util.function.Supplier;
 
+import com.github.jochenw.afw.core.util.FileUtils;
 import com.github.jochenw.afw.core.util.Holder;
 import com.wm.app.b2b.server.InvokeState;
 import com.wm.lang.ns.NSService;
@@ -46,5 +55,31 @@ public class DefaultIsEnvironment implements IIsEnvironment {
 	@Override
 	public String getCallingQServiceId(Object pCtx) {
 		return getCallingService(pCtx).getNSName().getFullName();
+	}
+
+	@Override
+	public Supplier<InputStream> findFile(String pUri) {
+		final Path p = Paths.get(pUri);
+		if (Files.isRegularFile(p)) {
+			return () -> {
+				try {
+					return Files.newInputStream(p);
+				} catch (IOException e) {
+					throw new UncheckedIOException(e);
+				}
+			};
+		} else {
+			return null;
+		}
+	}
+	@Override
+	public OutputStream createFile(String pUri) {
+		final Path p = Paths.get(pUri);
+		try {
+			FileUtils.createDirectoryFor(p);
+			return Files.newOutputStream(p);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 }
