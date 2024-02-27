@@ -3,6 +3,9 @@ package com.github.jochenw.wxutils.logng.svc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -10,14 +13,17 @@ import java.util.Properties;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import com.github.jochenw.afw.core.data.Data;
+import com.github.jochenw.afw.core.util.MutableBoolean;
 import com.github.jochenw.afw.di.api.IComponentFactory;
 import com.github.jochenw.afw.di.api.ILifecycleController;
 import com.github.jochenw.afw.di.api.Module;
 import com.github.jochenw.wxutils.logng.api.IIsFacade;
+import com.github.jochenw.wxutils.logng.api.ILogEvent;
 import com.github.jochenw.wxutils.logng.api.WxLogNg;
 import com.github.jochenw.wxutils.logng.api.ILogEvent.Level;
+import com.github.jochenw.wxutils.logng.api.ILoggerMetaData;
 import com.github.jochenw.wxutils.logng.api.ILoggerRegistry;
+import com.github.jochenw.wxutils.logng.api.ILoggerRegistry.DuplicateLoggerIdException;
 import com.softwareag.util.IDataMap;
 import com.wm.app.b2b.server.PackageListener;
 import com.wm.app.b2b.server.PackageManager;
@@ -82,7 +88,14 @@ public class AdminStartUpSvc extends IIsSvc {
 
 	@Override
 	public Object[] run(IDataMap pInput) throws Exception {
-		logWxLogMsg(Level.info, "WxLogNg service is starting at " + DateTimeFormatter.BASIC_ISO_DATE.format(ZonedDateTime.now()));
+		final IIsFacade facade = getIsFacade();
+		initWxLogLogger(facade);
+		final MutableBoolean initialized = new MutableBoolean();
+		final BiConsumer<Level,String> logger = (lv,msg) -> {
+			if (initialized.isSet()) {
+				logWxLogMsg(lv, msg);
+			}
+		};
 		final IComponentFactory cf = getComponentFactory();
 		final PackageListener pkgListener = new PackageListener() {
 			@Override
@@ -102,7 +115,7 @@ public class AdminStartUpSvc extends IIsSvc {
 			
 			@Override
 			public void postload(String pPkgName) throws Exception {
-				registerLoggersFor(pPkgName);
+				registerLoggersFor(logger, pPkgName);
 			}
 		};
 		final ILifecycleController.TerminableListener shutDownHook = new ILifecycleController.TerminableListener() {
@@ -113,47 +126,174 @@ public class AdminStartUpSvc extends IIsSvc {
 			
 			@Override
 			public void shutdown() {
+				logger.accept(Level.info, "Uninstalling package listener from IS server");
 				PackageManager.removePackageListener(pkgListener);
 			}
 		}; 
 		cf.requireInstance(ILifecycleController.class).addListener(shutDownHook);
+		logger.accept(Level.info, "Installing package listener in IS server");
 		PackageManager.addPackageListener(pkgListener);
 		for (com.wm.app.b2b.server.Package pkg : PackageManager.getAllPackages()) {
 			if (pkg.isEnabled()) {
-				registerLoggersFor(pkg.getName());
+				registerLoggersFor(logger, pkg.getName());
 			}
 		}
-		
+		logger.accept(Level.info, "WxLogNg package is started at " + DateTimeFormatter.BASIC_ISO_DATE.format(ZonedDateTime.now()));
 		return NO_RESULT;
 	}
 
-	protected void registerLoggersFor(String pPackageName) {
-		logWxLogMsg(Level.debug, "registerLoggersFor: -> " + pPackageName);
+	protected void initWxLogLogger(IIsFacade pFacade) {
+		final BiConsumer<Level,String> nullLogger = (lv,msg) -> {/* Do nothing */};
+		final IComponentFactory cf = getComponentFactory();
+		final String packageName = pFacade.getCurrentPkgId();
+		final String uri = "./packages/" + packageName
+				+ "/config/wxLogNg/WxLogNg-logger.properties";
+		readLogger(nullLogger, packageName, 
+				   cf.requireInstance(Properties.class),
+				   pFacade, uri);
+	}
+
+	protected void registerLoggersFor(BiConsumer<Level,String> pLogger, String pPackageName) {
+		pLogger.accept(Level.debug, "registerLoggersFor: -> " + pPackageName);
 		final IComponentFactory cf = getComponentFactory();
 		final Properties defaultProperties = cf.requireInstance(Properties.class);
-		final BiConsumer<String, Properties> loggerRegistrator = (uri, props) -> {
-			final String loggerId = props.getProperty("loggerId");
-			if (loggerId == null) {
-				throw new NullPointerException("Missing property in logger descriptor file " + uri + ": loggerId");
+		findLoggerDescriptors(pLogger, pPackageName, defaultProperties);
+		pLogger.accept(Level.debug, "registerLoggersFor: <- " + pPackageName);
+	}
+
+	protected void findLoggerDescriptors(BiConsumer<Level,String> pLogger,
+			                             String pPackageName,
+			                             Properties pDefaultProperties) {
+		final IIsFacade facade = getIsFacade();
+		final String[] uris = facade.findFilesInDir("./packages/" + pPackageName + "/config/wxLogNg");
+		if (uris != null) {
+			for (String uri : uris) {
+				readLogger(pLogger, pPackageName, pDefaultProperties, facade, uri);
 			}
-			if (loggerId.length() == 0) {
-				throw new IllegalArgumentException("Empty property in logger descriptor file " + uri + ": loggerId");
+		}
+	}
+
+	protected void readLogger(BiConsumer<Level, String> pLogger, String pPackageName,
+			                  Properties pDefaultProperties,
+			                  final IIsFacade facade, String uri) {
+		Properties props = null;
+		if (uri.endsWith(".properties.xml")) {
+			try (InputStream is = facade.read(uri)) {
+				props = new Properties();
+				props.loadFromXML(is);
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
 			}
-			final String levelStr = props.getProperty("logLevel", defaultProperties.getProperty("default.logLevel"));
-			if (levelStr == null) {
-				throw new NullPointerException("Missing property in logger descriptor file " + uri + ": logLevel");
+		} else if (uri.endsWith(".properties")) {
+			try (InputStream is = facade.read(uri)) {
+				props = new Properties();
+				props.load(is);
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
 			}
-			if (levelStr.length() == 0) {
-				throw new IllegalArgumentException("Empty property in logger descriptor file " + uri + ": logLevel");
-			}
-			final Level level;
+		}
+		if (props == null) {
+			pLogger.accept(Level.trace, "Ignoring logger descriptor file: " + uri);
+		}
+		if (props != null) {
+			pLogger.accept(Level.debug, "Found logger descriptor file: " + uri);
 			try {
-				level = Level.valueOf(levelStr.toLowerCase());
-			} catch (IllegalArgumentException e) {
-				throw new IllegalArgumentException("Invalid value for property logLevel in logger descriptor file " + uri + ": " + levelStr);
+				registerLogger(pLogger, pPackageName, uri, props, pDefaultProperties);
+			} catch (DuplicateLoggerIdException|NullPointerException|IllegalArgumentException e) {
+				pLogger.accept(Level.error,
+						e.getClass().getSimpleName() + ": " + e.getMessage());
 			}
-			
+		}
+	}
+	
+	protected void registerLogger(BiConsumer<Level,String> pLogger,
+                                  String pPackageName, String pUri,
+                                  Properties pProps, Properties pDefaultProps) {
+		final String loggerId = pProps.getProperty("loggerId");
+		if (loggerId == null) {
+			throw new NullPointerException("Missing property in logger descriptor file " + pUri + ": loggerId");
+		}
+		if (loggerId.length() == 0) {
+			throw new IllegalArgumentException("Empty property in logger descriptor file " + pUri + ": loggerId");
+		}
+		final String levelStr = pProps.getProperty("logLevel", pDefaultProps.getProperty("default.logLevel"));
+		if (levelStr == null) {
+			throw new NullPointerException("Missing property in logger descriptor file " + pUri + ": logLevel");
+		}
+		if (levelStr.length() == 0) {
+			throw new IllegalArgumentException("Empty property in logger descriptor file " + pUri + ": logLevel");
+		}
+		final Level level;
+		try {
+			level = Level.valueOf(levelStr.toLowerCase());
+		} catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException("Invalid value for property logLevel in logger descriptor file " + pUri + ": " + levelStr);
+		}
+		final String fileName = pProps.getProperty("logFileName");
+		final String maxFileSizeStr = pProps.getProperty("maxSize", pDefaultProps.getProperty("default.maxSize"));
+		if (maxFileSizeStr == null) {
+			throw new NullPointerException("Missing property in logger descriptor file " + pUri + ": maxSize");
+		}
+		if (maxFileSizeStr.length() == 0) {
+			throw new IllegalArgumentException("Empty property in logger descriptor file " + pUri + ": maxSize");
+		}
+		final long maxFileSize;
+		try {
+			maxFileSize = Long.parseLong(maxFileSizeStr);
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("Invalid value for property maxFileSize in logger descriptor file " + pUri + ": " + maxFileSizeStr);
+		}
+		final String maxGenerationsStr = pProps.getProperty("maxGenerations");
+		if (maxGenerationsStr == null) {
+			throw new NullPointerException("Missing property in logger descriptor file " + pUri + ": maxGenerations");
+		}
+		if (maxGenerationsStr.length() == 0) {
+			throw new IllegalArgumentException("Empty property in logger descriptor file " + pUri + ": maxGenerations");
+		}
+		final int maxGenerations;
+		try {
+			maxGenerations = Integer.parseInt(maxGenerationsStr);
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("Invalid value for property maxGenerations in logger descriptor file " + pUri + ": " + maxGenerationsStr);
+		}
+		final String layout = pProps.getProperty("layout", pDefaultProps.getProperty("default.layout"));
+		if (layout == null) {
+			throw new NullPointerException("Missing property in logger descriptor file " + pUri + ": layout");
+		}
+		if (layout.length() == 0) {
+			throw new IllegalArgumentException("Empty property in logger descriptor file " + pUri + ": layout");
+		}
+		final String dirStr = pProps.getProperty("dir", pDefaultProps.getProperty("default.logDir"));
+		if (dirStr == null) {
+			throw new NullPointerException("Missing property in logger descriptor file " + pUri + ": dir");
+		}
+		if (dirStr.length() == 0) {
+			throw new IllegalArgumentException("Empty property in logger descriptor file " + pUri + ": dir");
+		}
+		final Path dir = Paths.get(dirStr);
+		if (!Files.isDirectory(dir)) {
+			throw new IllegalArgumentException("Invalid value for property dir in logger descriptor file " + pUri
+					                           + ": " + dirStr
+					                           + " (Does not exist, or is not a directory)");
+		}
+		final ILoggerMetaData lmd = new ILoggerMetaData() {
+			@Override public int getMaxGenerations() { return maxGenerations; }
+			@Override public long getMaxFileSize() { return maxFileSize; }
+			@Override public String getLoggerId() { return loggerId; }
+			@Override public Level getLevel() { return level; }
+			@Override public String getLayout() { return layout; }
+			@Override public String getFile() { return fileName; }
+			@Override public Path getDir() { return dir; }
+			@Override public String getPackageName() { return pPackageName; }
 		};
-		logWxLogMsg(Level.debug, "registerLoggersFor: <- " + pPackageName);
+		pLogger.accept(Level.info, "Logger registration: loggerId=" + loggerId
+				                + ", packageName=" + pPackageName
+				                + ", level=" + level.name()
+				                + ", layout=" + layout
+				                + ", fileName=" + fileName
+				                + ", maxFileSize=" + maxFileSize
+				                + ", maxGenerations=" + maxGenerations
+				                + ", dir=" + dir.toAbsolutePath().toString());
+		getComponentFactory().requireInstance(ILoggerRegistry.class).registerLogger(lmd);
 	}
 }

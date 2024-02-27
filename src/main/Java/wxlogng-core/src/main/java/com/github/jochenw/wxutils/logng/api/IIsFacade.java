@@ -8,4 +8,5 @@ public interface IIsFacade {
 	public String getCurrentQSvcId();
 	public boolean hasFile(String pRelativePath);
 	public InputStream read(String pRelativePath);
+	public String[] findFilesInDir(String pRelativePath);
 }

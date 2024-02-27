@@ -12,4 +12,5 @@ public interface ILoggerMetaData {
 	public int getMaxGenerations();
 	public long getMaxFileSize();
 	public String getLayout();
+	public String getPackageName();
 }
