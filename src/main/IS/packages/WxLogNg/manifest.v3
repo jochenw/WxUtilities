@@ -10,4 +10,9 @@
   <null name="requires"/>
   <null name="listACL"/>
   <value name="webappLoad">yes</value>
+  <value name="reloadWithDependentPackage">yes</value>
+  <null name="build"/>
+  <null name="description"/>
+  <value name="created_date">22-02-2024 13:28:27 CET</value>
+  <null name="extendedProperties"/>
 </Values>
