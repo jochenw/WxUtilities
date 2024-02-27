@@ -7,7 +7,10 @@ import com.wm.util.Values;
 import com.wm.app.b2b.server.Service;
 import com.wm.app.b2b.server.ServiceException;
 // --- <<IS-START-IMPORTS>> ---
-import com.github.jochenw.wxutils.logng.api.WxLogNg;
+import com.github.jochenw.wxutils.logng.api.IIsFacade;
+import com.github.jochenw.wxutils.logng.is.DefaultIsFacade;
+import com.github.jochenw.wxutils.logng.svc.AdminShutDownSvc;
+import com.github.jochenw.wxutils.logng.svc.AdminStartUpSvc;
 import com.github.jochenw.wxutils.logng.svc.IIsSvc;
 // --- <<IS-END-IMPORTS>> ---
 
@@ -32,7 +35,7 @@ public final class admin
 	{
 		// --- <<IS-START(shutDown)>> ---
 		// @sigtype java 3.5
-		IIsSvc.run(AdminStartUp.class, pipeline);
+		IIsSvc.run(AdminShutDownSvc.class, pipeline);
 			
 		// --- <<IS-END>> ---
 
@@ -46,13 +49,15 @@ public final class admin
 	{
 		// --- <<IS-START(startUp)>> ---
 		// @sigtype java 3.5
+		final IIsFacade facade = new DefaultIsFacade();
+		AdminStartUpSvc.init(facade.getCurrentPkgId(), facade, (b) -> {
+			
+		});
+			
+			
 		// --- <<IS-END>> ---
 
                 
 	}
-
-	// --- <<IS-START-SHARED>> ---
-	private static WxLogNg wxLogNg;
-	// --- <<IS-END-SHARED>> ---
 }
 

@@ -2,12 +2,17 @@ package com.github.jochenw.wxutils.logng.svc;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.time.ZonedDateTime;
+import java.util.function.Consumer;
 
 import com.github.jochenw.afw.core.util.Exceptions;
 import com.github.jochenw.afw.di.api.IComponentFactory;
 import com.github.jochenw.afw.di.api.IComponentFactoryAware;
 import com.github.jochenw.wxutils.logng.api.IIsFacade;
+import com.github.jochenw.wxutils.logng.api.ILogEvent;
 import com.github.jochenw.wxutils.logng.api.WxLogNg;
+import com.github.jochenw.wxutils.logng.api.ILogEvent.Level;
+import com.github.jochenw.wxutils.logng.api.ILoggerRegistry;
 import com.softwareag.util.IDataMap;
 import com.wm.app.b2b.server.ServiceException;
 import com.wm.data.IData;
@@ -90,5 +95,46 @@ public abstract class IIsSvc implements IComponentFactoryAware {
 		} else {
 			return svc;
 		}
+	}
+
+	protected void logWxLogMsg(Level pLevel, String pMsg) {
+		final IIsFacade facade = getIsFacade();
+		final ILogEvent evt = new ILogEvent() {
+			@Override
+			public String getSvcId() {
+				return facade.getCurrentSvcId();
+			}
+
+			@Override
+			public String getQSvcId() {
+				return facade.getCurrentQSvcId();
+			}
+
+			@Override
+			public String getPkgId() {
+				return facade.getCurrentPkgId();
+			}
+
+			@Override
+			public String getMsg() {
+				return pMsg;
+			}
+
+			@Override
+			public String getLoggerId() {
+				return "WxLogNg";
+			}
+
+			@Override
+			public Level getLevel() {
+				return Level.info;
+			}
+
+			@Override
+			public ZonedDateTime getDateTime() {
+				return ZonedDateTime.now();
+			}
+		};
+		getComponentFactory().requireInstance(ILoggerRegistry.class).log(evt);
 	}
 }

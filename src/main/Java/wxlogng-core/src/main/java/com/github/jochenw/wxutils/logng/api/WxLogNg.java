@@ -23,11 +23,23 @@ public class WxLogNg extends Application {
 	private static Supplier<Module> getModuleSupplier(Supplier<Module> pModuleSupplier) {
 		return () -> Objects.notNull(pModuleSupplier.get(), MODULE);
 	}
-	
+
+	public static void setInstance(WxLogNg pInstance) {
+		synchronized(WxLogNg.class) {
+			THE_INSTANCE = pInstance;
+		}
+	}
+
 	public static WxLogNg getInstance() {
-		synchronized (WxLogNg.class) {
+		synchronized(WxLogNg.class) {
+			return THE_INSTANCE;
+		}
+	}
+
+	public static WxLogNg getInstance(Module pModule) {
+		synchronized(WxLogNg.class) {
 			if (THE_INSTANCE == null) {
-				THE_INSTANCE = new WxLogNg(() -> null);
+				THE_INSTANCE = Application.of(WxLogNg.class, pModule);
 			}
 			return THE_INSTANCE;
 		}
