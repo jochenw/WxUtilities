@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 import com.github.jochenw.wxutils.logng.api.IIsFacade;
@@ -48,5 +51,24 @@ public class DefaultIsFacade implements IIsFacade {
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
+	}
+
+	@Override
+	public String[] findFilesInDir(String pRelativePath) {
+		final Path currentDir = Paths.get(".");
+		final Path dir = Paths.get(pRelativePath);
+		final List<String> list = new ArrayList<>();
+		if (Files.isDirectory(dir)) {
+			try {
+				Files.list(dir).forEach((p) -> {
+					if (Files.isRegularFile(p)) {
+						list.add(currentDir.relativize(p).toString());
+					}
+				});
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+		}
+		return list.toArray(new String[list.size()]);
 	}
 }

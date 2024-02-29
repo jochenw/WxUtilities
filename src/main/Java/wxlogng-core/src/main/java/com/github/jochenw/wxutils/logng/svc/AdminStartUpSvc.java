@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.BiConsumer;
@@ -18,12 +19,12 @@ import com.github.jochenw.afw.di.api.IComponentFactory;
 import com.github.jochenw.afw.di.api.ILifecycleController;
 import com.github.jochenw.afw.di.api.Module;
 import com.github.jochenw.wxutils.logng.api.IIsFacade;
-import com.github.jochenw.wxutils.logng.api.ILogEvent;
 import com.github.jochenw.wxutils.logng.api.WxLogNg;
 import com.github.jochenw.wxutils.logng.api.ILogEvent.Level;
 import com.github.jochenw.wxutils.logng.api.ILoggerMetaData;
 import com.github.jochenw.wxutils.logng.api.ILoggerRegistry;
 import com.github.jochenw.wxutils.logng.api.ILoggerRegistry.DuplicateLoggerIdException;
+import com.github.jochenw.wxutils.logng.impl.ILogEngine;
 import com.softwareag.util.IDataMap;
 import com.wm.app.b2b.server.PackageListener;
 import com.wm.app.b2b.server.PackageManager;
@@ -209,6 +210,10 @@ public class AdminStartUpSvc extends IIsSvc {
 	protected void registerLogger(BiConsumer<Level,String> pLogger,
                                   String pPackageName, String pUri,
                                   Properties pProps, Properties pDefaultProps) {
+		@SuppressWarnings("unchecked")
+		final Map<String,ILogEngine<?>> engineMap = (Map<String,ILogEngine<?>>)
+				getComponentFactory().requireInstance(Map.class, ILogEngine.class.getName());
+
 		final String loggerId = pProps.getProperty("loggerId");
 		if (loggerId == null) {
 			throw new NullPointerException("Missing property in logger descriptor file " + pUri + ": loggerId");
@@ -276,6 +281,18 @@ public class AdminStartUpSvc extends IIsSvc {
 					                           + ": " + dirStr
 					                           + " (Does not exist, or is not a directory)");
 		}
+		final String engineId = pProps.getProperty("engineId", pDefaultProps.getProperty("default.engineId"));
+		if (engineId == null) {
+			throw new NullPointerException("Missing property in logger descriptor file " + pUri + ": engineId");
+		}
+		if (engineId.length() == 0) {
+			throw new IllegalArgumentException("Empty property in logger descriptor file " + pUri + ": engiineId");
+		}
+		if (!engineMap.containsKey(engineId)) {
+			throw new IllegalArgumentException("Invalid value for property engineId in logger descriptor file " + pUri
+					                           + ": " + engineId
+					                           + " (No such engine is registered)");
+		}
 		final ILoggerMetaData lmd = new ILoggerMetaData() {
 			@Override public int getMaxGenerations() { return maxGenerations; }
 			@Override public long getMaxFileSize() { return maxFileSize; }
@@ -285,6 +302,7 @@ public class AdminStartUpSvc extends IIsSvc {
 			@Override public String getFile() { return fileName; }
 			@Override public Path getDir() { return dir; }
 			@Override public String getPackageName() { return pPackageName; }
+			@Override public String getEngineId() { return engineId; }
 		};
 		pLogger.accept(Level.info, "Logger registration: loggerId=" + loggerId
 				                + ", packageName=" + pPackageName

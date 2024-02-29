@@ -13,4 +13,5 @@ public interface ILoggerMetaData {
 	public long getMaxFileSize();
 	public String getLayout();
 	public String getPackageName();
+	public String getEngineId();
 }
