@@ -1,0 +1,20 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.github.jochenw.wxutils.logng</groupId>
+  <artifactId>wxlogng</artifactId>
+  <version>0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <properties>
+	  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	  <maven.compiler.source>8</maven.compiler.source>
+	  <maven.compiler.target>8</maven.compiler.target>
+  </properties>
+  <modules>
+	<module>wxlogng-core</module>
+	<module>wxlogng-api</module>
+	<module>wxlogng-engine-default</module>
+  </modules>
+  <build>
+	  <defaultGoal>clean install</defaultGoal>
+  </build>
+</project>
