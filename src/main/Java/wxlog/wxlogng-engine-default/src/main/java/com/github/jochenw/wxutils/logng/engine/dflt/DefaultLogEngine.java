@@ -14,7 +14,14 @@ import com.github.jochenw.wxutis.logng.api.ILogEvent.Level;
 import com.github.jochenw.wxutis.logng.api.ILoggerMetaData;
 
 
+/** Default implementation of a log engine.
+ */
 public class DefaultLogEngine implements ILogEngine<DefaultLogEngine.DefaultLogSink> {
+	/** Default implementation of a logger.
+	 * <em>Note:</em> This implementation assumes exclusive access on the log file
+	 * while being invoked. The {@link DefaultLoggerRegistry} ensures this by
+	 * synchronizing on the {@link DefaultLoggerRegistry.DefaultLogger}.
+	 */
 	public class DefaultLogSink implements ILogEngine.ILogSink {
 		private final ILoggerMetaData metaData;
 		private OutputStream out;
@@ -29,15 +36,13 @@ public class DefaultLogEngine implements ILogEngine<DefaultLogEngine.DefaultLogS
 			boolean result = false;
 			if (pMsg != null) {
 				final byte[] bytes = pMsg.getBytes(StandardCharsets.UTF_8);
-				synchronized (this) {
-					size += (bytes.length+1);
-					if (size >= metaData.getMaxFileSize()) {
-						result = true;
-					}
-					out.write(bytes);
-					out.write((int) '\n');
-					out.flush();
+				size += (bytes.length+1);
+				if (size >= metaData.getMaxFileSize()) {
+					result = true;
 				}
+				out.write(bytes);
+				out.write((int) '\n');
+				out.flush();
 			}
 			return result;
 		}

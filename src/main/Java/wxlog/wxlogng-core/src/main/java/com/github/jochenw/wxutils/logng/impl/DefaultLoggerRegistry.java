@@ -40,6 +40,8 @@ public class DefaultLoggerRegistry implements ILoggerRegistry, IComponentFactory
 		}
 	}
 	private final ConcurrentMap<String,DefaultLogger> loggers = new ConcurrentHashMap<>();
+	private IGenFileRotator genFileRotator;
+	private IGenFileNameDerivator genFileNameDerivator;
 	private IComponentFactory componentFactory;
 	private Map<String,ILogEngine<?>> engines;
 
@@ -50,6 +52,7 @@ public class DefaultLoggerRegistry implements ILoggerRegistry, IComponentFactory
 		final Map<String,ILogEngine<?>> engineMap = (Map<String,ILogEngine<?>>)
 				componentFactory.requireInstance(Map.class, ILogEngine.class.getName());
 		engines = engineMap;
+		genFileNameDerivator = pComponentFactory.requireInstance(IGenFileNameDerivator.class);
 	}
 
 	@Override
@@ -59,7 +62,7 @@ public class DefaultLoggerRegistry implements ILoggerRegistry, IComponentFactory
 			throw new IllegalArgumentException("Invalid logger id (No such logger registered): " + pLoggerId);
 		}
 		final Level level = logger.metaData.getLevel();
-		return level.ordinal() >= pLevel.ordinal();
+		return ILogEvent.isEnabled(pLevel, level);
 	}
 
 	@Override
@@ -69,13 +72,39 @@ public class DefaultLoggerRegistry implements ILoggerRegistry, IComponentFactory
 		if (logger == null) {
 			throw new IllegalArgumentException("Invalid logger id (No such logger registered): " + loggerId);
 		}
-		Level eventLevel = pEvent.getLevel();
-		if (logger.metaData.getLevel().ordinal() >= eventLevel.ordinal()) {
+		if (ILogEvent.isEnabled(pEvent.getLevel(), logger.metaData.getLevel())) {
 			final String logMsg = logger.logWriter.formatter.format(pEvent);
-			try {
-				logger.logWriter.sink.log(eventLevel, logMsg);
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
+			final boolean rotateRequired;
+			synchronized(logger) {
+				try {
+					rotateRequired = logger.logWriter.sink.log(pEvent.getLevel(), logMsg);
+				} catch (IOException e) {
+					throw new UncheckedIOException(e);
+				}
+			}
+			if (rotateRequired) {
+				rotate(logger);
+			}
+		}
+	}
+
+	/** Rotates the given log file.
+	 * @param pLogger The logger, which must be rotated.
+	 */
+	protected void rotate(DefaultLogger pLogger) {
+		final int numGenerations = pLogger.metaData.getMaxGenerations();
+		if (numGenerations > 0) {
+			synchronized(pLogger) {
+				@SuppressWarnings("unchecked")
+				final ILogEngine<ILogSink> engine = (ILogEngine<ILogSink>) pLogger.logWriter.getLogEngine();
+				try {
+					engine.close(pLogger.logWriter.getLogSink());
+				} catch (IOException e) {
+					throw new UncheckedIOException(e);
+				}
+				final String[] fileNames = genFileNameDerivator.getFileNamesForGenerations(pLogger.metaData.getFile(), numGenerations);
+				genFileRotator.rotate(pLogger.metaData.getDir(), fileNames);
+				pLogger.logWriter.sink = engine.create(pLogger.metaData, pLogger.metaData.getFile());
 			}
 		}
 	}

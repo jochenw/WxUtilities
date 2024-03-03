@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -76,6 +78,7 @@ public class AdminStartUpSvc extends IIsSvc {
 			b.bind(IIsFacade.class).toInstance(pFacade);
 			b.bind(Properties.class).toInstance(wxLogProperties);
 			b.addFinalizer((cf) -> { engines.values().forEach((e) -> cf.init(e)); });
+			b.bind(Map.class, ILogEngine.class.getName()).toInstance(engines);
 		});
 		if (pModule == null) {
 			return m;
@@ -87,7 +90,7 @@ public class AdminStartUpSvc extends IIsSvc {
 	public static Map<String,ILogEngine<?>> getLogEngines(Properties pProperties) {
 		final Map<String,ILogEngine<?>> map = new HashMap<>();
 		for (int i = 0;  ; i++) {
-			final String key = "log.engine" + (i > 0 ? ("." + i) : "");
+			final String key = "log.engine." + i;
 			final String value = pProperties.getProperty(key);
 			if (value == null  ||  value.length() == 0) {
 				break;
@@ -121,8 +124,18 @@ public class AdminStartUpSvc extends IIsSvc {
 				throw new IllegalStateException("Invalid engine definition in property "
 						+ key + ": Class " + clazz.getName() + " doesn't have a public default constructor.");
 			}
+			final ILogEngine<?> engine;
 			try {
+				engine = (ILogEngine<?>) cons.newInstance();
+			} catch (InstantiationException|InvocationTargetException|IllegalAccessException e) {
+				throw new UndeclaredThrowableException(e);
+			}
+			if (map.put(id, engine) != null) {
+				throw new IllegalStateException("Invalid engine definition in property "
+						+ key + ": Duplicate engine id (" + id + ")");
+			}
 		}
+		return map;
 	}
 	
 	public static void init(String pPackageName, IIsFacade pFacade, Module pModule) {
