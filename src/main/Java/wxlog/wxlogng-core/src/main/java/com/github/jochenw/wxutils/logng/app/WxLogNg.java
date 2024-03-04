@@ -16,7 +16,7 @@ import com.github.jochenw.wxutils.logng.svc.PlainLogSvc;
 public class WxLogNg extends Application {
 	private static WxLogNg THE_INSTANCE;
 	
-	protected WxLogNg(Supplier<Module> pModuleSupplier) {
+	public WxLogNg(Supplier<Module> pModuleSupplier) {
 		super(getModuleSupplier(pModuleSupplier));
 	}
 

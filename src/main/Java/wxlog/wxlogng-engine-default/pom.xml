@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.github.jochenw.wxutils.logng</groupId>
-    <artifactId>wxlogng</artifactId>
+    <artifactId>wxlogng-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
   <artifactId>wxlogng-engine-default</artifactId>

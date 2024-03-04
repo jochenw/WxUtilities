@@ -22,6 +22,7 @@ import com.github.jochenw.afw.core.util.MutableBoolean;
 import com.github.jochenw.afw.di.api.IComponentFactory;
 import com.github.jochenw.afw.di.api.ILifecycleController;
 import com.github.jochenw.afw.di.api.Module;
+import com.github.jochenw.afw.di.util.Exceptions;
 import com.github.jochenw.wxutils.logng.app.IIsFacade;
 import com.github.jochenw.wxutils.logng.app.WxLogNg;
 import com.github.jochenw.wxutis.logng.api.ILogEngine;
@@ -64,7 +65,7 @@ public class AdminStartUpSvc extends IIsSvc {
 		propertyReader.accept(deployedPropertiesUri);
 		propertyReader.accept(configPropertiesUri);
 		if (properties.isEmpty()) {
-			throw new IllegalStateException("Neither of the following properties has been found: "
+			throw new IllegalStateException("Neither of the following propert< files has been found: "
 					+ configPropertiesUri + ", " + deployedPropertiesUri + ", " + configPropertiesUri);
 		}
 		return properties;
@@ -138,11 +139,16 @@ public class AdminStartUpSvc extends IIsSvc {
 		return map;
 	}
 	
-	public static void init(String pPackageName, IIsFacade pFacade, Module pModule) {
+	public void init(String pPackageName, IIsFacade pFacade, Module pModule) {
 		Objects.requireNonNull(pPackageName, "Package name");
 		Objects.requireNonNull(pFacade, "Is Facade");
 		Objects.requireNonNull(pModule, "Module");
-		WxLogNg.getInstance(getModule(pPackageName, pFacade, pModule));
+		final WxLogNg wxLogNg = WxLogNg.getInstance(getModule(pPackageName, pFacade, pModule));
+		try {
+			init(wxLogNg.getComponentFactory());
+		} catch (Exception e) {
+			throw Exceptions.show(e);
+		}
 	}
 
 	@Override
