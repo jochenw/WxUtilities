@@ -144,8 +144,9 @@ public class AdminStartUpSvc extends IIsSvc {
 		Objects.requireNonNull(pFacade, "Is Facade");
 		Objects.requireNonNull(pModule, "Module");
 		final WxLogNg wxLogNg = WxLogNg.getInstance(getModule(pPackageName, pFacade, pModule));
+		final IComponentFactory cf = wxLogNg.getComponentFactory();
 		try {
-			init(wxLogNg.getComponentFactory());
+			init(cf);
 		} catch (Exception e) {
 			throw Exceptions.show(e);
 		}

@@ -11,7 +11,10 @@ import java.util.Map;
 import org.junit.Test;
 
 import com.github.jochenw.afw.core.util.MutableBoolean;
+import com.github.jochenw.afw.di.api.Application;
+import com.github.jochenw.afw.di.api.IComponentFactory;
 import com.github.jochenw.wxutils.logng.app.IIsFacade;
+import com.github.jochenw.wxutils.logng.app.WxLogNg;
 import com.softwareag.util.IDataMap;
 import com.wm.data.IData;
 import com.wm.data.IDataFactory;
@@ -118,5 +121,8 @@ public class AdminStartUpSvcTest {
 		
 		adminStartUpSvc.run(pipeline);
 		assertTrue(invoked.isSet());
+		final IComponentFactory cf = adminStartUpSvc.getComponentFactory();
+		assertNotNull(cf);
+		assertSame(cf.requireInstance(Application.class), WxLogNg.getInstance());
 	}
 }
