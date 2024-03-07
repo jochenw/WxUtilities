@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import com.github.jochenw.afw.di.api.IComponentFactory;
 import com.github.jochenw.afw.di.api.IComponentFactoryAware;
+import com.github.jochenw.wxutils.logng.fmt.ILogFormatter;
+import com.github.jochenw.wxutils.logng.fmt.ILogFormatterFactory;
 import com.github.jochenw.wxutis.logng.api.ILogEngine;
 import com.github.jochenw.wxutis.logng.api.ILogEvent;
 import com.github.jochenw.wxutis.logng.api.ILoggerMetaData;

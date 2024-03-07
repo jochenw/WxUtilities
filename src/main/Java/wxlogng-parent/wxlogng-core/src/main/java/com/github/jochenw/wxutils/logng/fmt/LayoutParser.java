@@ -1,4 +1,4 @@
-package com.github.jochenw.wxutils.logng.impl;
+package com.github.jochenw.wxutils.logng.fmt;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

@@ -1,4 +1,4 @@
-package com.github.jochenw.wxutils.logng.impl;
+package com.github.jochenw.wxutils.logng.fmt;
 
 public class DefaultLogFormatterFactory implements ILogFormatterFactory {
 

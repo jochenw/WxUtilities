@@ -1,4 +1,4 @@
-package com.github.jochenw.wxutils.logng.impl;
+package com.github.jochenw.wxutils.logng.fmt;
 
 import static org.junit.Assert.*;
 
@@ -8,9 +8,9 @@ import java.time.format.DateTimeFormatter;
 import org.junit.Test;
 
 import com.github.jochenw.afw.core.util.Holder;
-import com.github.jochenw.wxutils.logng.impl.LayoutParser.InvalidLayoutException;
-import com.github.jochenw.wxutils.logng.impl.LayoutParser.Listener;
-import com.github.jochenw.wxutils.logng.impl.LayoutParser.PCtx;
+import com.github.jochenw.wxutils.logng.fmt.LayoutParser.InvalidLayoutException;
+import com.github.jochenw.wxutils.logng.fmt.LayoutParser.Listener;
+import com.github.jochenw.wxutils.logng.fmt.LayoutParser.PCtx;
 
 import junit.framework.AssertionFailedError;
 
