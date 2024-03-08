@@ -90,11 +90,17 @@ public class LayoutParser {
 		private final int lineNumber, colNumber;
 
 		public InvalidLayoutException(PCtx pCtx, String pLayout, String pMessage) {
+			this(pCtx.getUri(), pCtx.getLineNumber(), pCtx.getColumnNumber(),
+			     pLayout, pMessage);
+		}
+
+		public InvalidLayoutException(String pUri, int pLineNumber,
+				                      int pColumnNumber, String pLayout, String pMessage) {
 			super(pMessage);
 			layout = pLayout;
-			uri = pCtx.getUri();
-			lineNumber = pCtx.getLineNumber();
-			colNumber = pCtx.getColumnNumber();
+			uri = pUri;
+			lineNumber = pLineNumber;
+			colNumber = pColumnNumber;
 		}
 
 		public String getLayout() { return layout; }
@@ -161,13 +167,8 @@ public class LayoutParser {
 		final String layoutStr = Objects.requireNonNull(pLayout, "Layout String");
 		final Listener lstnr = Objects.requireNonNull(pListener, "Listener");
 		final MutableBoolean lastTokenIsMessage = new MutableBoolean();
+		final MutableBoolean messageTokenSeen = new MutableBoolean();
 		final Listener listener = new Listener() {
-			@Override
-			public void dateTime(PCtx pCtx, DateTimeFormatter pFormat) {
-				lastTokenIsMessage.unset();
-				lstnr.dateTime(pCtx, pFormat);
-			}
-
 			@Override
 			public void dateTime(PCtx pCtx, String pFormat) {
 				lastTokenIsMessage.unset();
@@ -212,13 +213,13 @@ public class LayoutParser {
 
 			@Override
 			public void msg(PCtx pCtx) {
+				messageTokenSeen.set();
 				lastTokenIsMessage.set();
 				lstnr.msg(pCtx);
 			}
 
 			@Override
 			public void literal(PCtx pCtx, String pLiteral) {
-				// TODO Auto-generated method stub
 				lstnr.literal(pCtx, pLiteral);
 			}
 		};
@@ -240,9 +241,10 @@ public class LayoutParser {
 			}
 		};
 		final IntSupplier charSupplier = () -> {
-			final int index = colNumber.inc();
-			if (layoutStr.length() > index-1) {
-				final int c = (int) layoutStr.charAt(index-1);
+			final int index = colNumber.intValue();
+			if (layoutStr.length() > index) {
+				final int c = (int) layoutStr.charAt(index);
+				colNumber.inc();
 				if (c == 10) {
 					throw new InvalidLayoutException(pCtx, layoutStr,
 							"Invalid LineFeed character (0xa) in layout string.");
@@ -259,6 +261,7 @@ public class LayoutParser {
 		for (;;) {
 			final int c1 = charSupplier.getAsInt();
 			if (c1 == '%') {
+				final int tokenStartColumn = pCtx.getColumnNumber();
 				final char tokenChar1, tokenChar2;
 				final int c2 = charSupplier.getAsInt();
 				if (Character.isAlphabetic(c2)) {
@@ -280,15 +283,18 @@ public class LayoutParser {
 				String details = null;
 				final int c4 = charSupplier.getAsInt();
 				if (c4 == '{') {
+					final int detailsStart = pCtx.getColumnNumber();
 					final StringBuilder detailsSb = new StringBuilder();
 					for (;;) {
 						final int c5 = charSupplier.getAsInt();
 						if (c5 == '}') {
 							break;
 						} else if (c5 == -1) {
-							throw new InvalidLayoutException(pCtx, pLayout,
+							throw new InvalidLayoutException(
+									pCtx.getUri(), pCtx.getLineNumber(), detailsStart,
+									pLayout,
 									"Incomplete token, expected "
-									+ "'}' character after '}' character.");
+									+ "'}' character after '{' character.");
 						} else {
 							detailsSb.append((char) c5);
 						}
@@ -303,8 +309,7 @@ public class LayoutParser {
 				}
 				sbLiteralHandler.run();
 				if (!"dt".equals(token)
-				    &&  details != null
-				    &&  details.length() > 0) {
+				    &&  details != null) {
 					throw new InvalidLayoutException(pCtx, pLayout,
 							"Unexpected detail string ('{"
 							+ details + "}' after token "
@@ -313,7 +318,12 @@ public class LayoutParser {
 				// dt|li|lv|pi|si|sq|ti|ms
 				switch (token) {
 				case "dt":
-					listener.dateTime(pCtx, details);
+					try {
+						listener.dateTime(pCtx, details);
+					} catch (IllegalArgumentException e) {
+						throw new InvalidLayoutException(pCtx, pLayout,
+								"Invalid date/time pattern: %dt{" + details + "}");
+					}
 					break;
 				case "li":
 					listener.loggerId(pCtx);
@@ -334,12 +344,18 @@ public class LayoutParser {
 					listener.threadId(pCtx);
 					break;
 				case "ms":
+					if (messageTokenSeen.isSet()) {
+						throw new InvalidLayoutException(pCtx, pLayout,
+								"Duplicate message token.");
+					}
 					listener.msg(pCtx);
 					break;
 				default:
-					throw new InvalidLayoutException(pCtx, pLayout,
+					throw new InvalidLayoutException(pCtx.getUri(),
+							pCtx.getLineNumber(), tokenStartColumn,
+							pLayout,
 							"Unknown token reference '%" + token
-							+ " expected dt|li|lv|pi|si|sq|ti|ms"
+							+ "', expected dt|li|lv|pi|si|sq|ti|ms"
 							+ " after '%'");
 				}
 			} else if (c1 == -1) {
@@ -356,7 +372,7 @@ public class LayoutParser {
 	
 	public static DateTimeFormatter asDateTimeFormat(String pFormat) {
 		if (pFormat == null  ||  pFormat.length() == 0) {
-			return DateTimeFormatter.ISO_DATE_TIME;
+			return DateTimeFormatter.ISO_ZONED_DATE_TIME;
 		} else {
 			Field field;
 			try {

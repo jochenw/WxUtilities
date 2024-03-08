@@ -105,13 +105,13 @@ public class LayoutParserTest {
 	@Test
 	public void testConstantDateTimeFormatterDefault() {
 		final DateTimeFormatter dtf = testDateTimeFormatterReference("%dt %ms");
-		assertSame(DateTimeFormatter.ISO_DATE_TIME, dtf);
+		assertSame(DateTimeFormatter.ISO_ZONED_DATE_TIME, dtf);
 	}
 
 	@Test
 	public void testConstantDateTimeFormatterReference() {
-		final DateTimeFormatter dtf = testDateTimeFormatterReference("%dt{ISO_ZONED_DATE_TIME} %ms");
-		assertSame(DateTimeFormatter.ISO_ZONED_DATE_TIME, dtf);
+		final DateTimeFormatter dtf = testDateTimeFormatterReference("%dt{ISO_DATE_TIME} %ms");
+		assertSame(DateTimeFormatter.ISO_DATE_TIME, dtf);
 	}
 
 	@Test
@@ -123,11 +123,67 @@ public class LayoutParserTest {
 
 	@Test
 	public void testLfInToken() {
-		final InvalidLayoutException ile = testInvalidLayout("%dt\\n%ms");
+		final InvalidLayoutException ile = testInvalidLayout("%dt\n%ms");
 		assertNull(ile.getUri());
 		assertEquals(1, ile.getLineNumber());
 		assertEquals(4, ile.getColNumber());
-		assertEquals("", ile.getMessage());
+		assertEquals("Invalid LineFeed character (0xa) in layout string.", ile.getMessage());
+	}
+	@Test
+	public void testCrInToken() {
+		testInvalidLayout("%dt\r%ms", 4, "Invalid CarriageReturn character (0xd) in layout string.");
+	}
+	@Test
+	public void testIncompleteTokenException1() {
+		testInvalidLayout("%/ %ms", 2,
+				"Incomplete token, expected dt|li|lv|pi|si|sq|ti|ms after '%' character.");
+	}
+	@Test
+	public void testIncompleteTokenException2() {
+		testInvalidLayout("%d/ %ms", 3,
+				"Incomplete token, expected dt|li|lv|pi|si|sq|ti|ms after '%' character.");
+	}
+	@Test
+	public void testIncompleteTokenException3() {
+		testInvalidLayout("%dt{yyyy %ms", 4,
+				"Incomplete token, expected '}' character after '{' character.");
+	}
+	@Test
+	public void testUnknownToken() {
+		testInvalidLayout("%xy %ms", 1,
+				"Unknown token reference '%xy', expected dt|li|lv|pi|si|sq|ti|ms after '%'");
+	}
+	@Test
+	public void testUnexpectedDetails() {
+		testInvalidLayout("%li{} %ms", 5,
+				"Unexpected detail string ('{}' after token li");
+	}
+	@Test
+	public void testLayoutNotEndingWithMessage() {
+		testInvalidLayout("%dt %li", 7,
+				          "Layout must end with %ms");
+	}
+	@Test
+	public void testDuplicateMessageToken() {
+		testInvalidLayout("%dt %ms%ms", 10,
+				          "Duplicate message token.");
+	}
+	@Test
+	public void testEmptyLayout() {
+		testInvalidLayout("", 0,
+				          "Layout must end with %ms");
+	}
+	@Test
+	public void invalidDateTimePattern() {
+		final String invalidDateTimePattern = "b";
+		try {
+			DateTimeFormatter.ofPattern(invalidDateTimePattern);
+			throw new AssertionFailedError("Expected Exception");
+		} catch (IllegalArgumentException e) {
+			// Do nothing, make sure, that the date/time pattern is, indeed, invalid.
+		}
+		testInvalidLayout("%dt{" + invalidDateTimePattern + "} %ms", 6,
+				"Invalid date/time pattern: %dt{" + invalidDateTimePattern + "}");
 	}
 	protected void testParseOkay(final String pLayout) {
 		final TestListener tl = new TestListener();
@@ -142,6 +198,20 @@ public class LayoutParserTest {
 			throw new AssertionFailedError("Expected Exception");
 		} catch (InvalidLayoutException e) {
 			assertEquals(pLayout, e.getLayout());
+			return e;
+		}
+	}
+	protected InvalidLayoutException testInvalidLayout(String pLayout, int pColumnNumber,
+			String pExpectedMessage) {
+		try {
+			final TestListener tl = new TestListener();
+			new LayoutParser().parse(pLayout, tl, null);
+			throw new AssertionFailedError("Expected Exception");
+		} catch (InvalidLayoutException e) {
+			assertEquals(pLayout, e.getLayout());
+			assertEquals(1, e.getLineNumber());
+			assertEquals(pColumnNumber, e.getColNumber());
+			assertEquals(pExpectedMessage, e.getMessage());
 			return e;
 		}
 	}
