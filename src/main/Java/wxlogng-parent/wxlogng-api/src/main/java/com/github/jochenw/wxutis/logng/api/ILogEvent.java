@@ -12,9 +12,12 @@ public interface ILogEvent {
 	public String getSvcId();
 	public String getQSvcId();
 	public String getMsg();
+	public String getThreadId();
 	public ZonedDateTime getDateTime();
 
 	public static boolean isEnabled(Level pEventLevel, Level pConfiguredLevel) {
 		return pEventLevel.ordinal() >= pConfiguredLevel.ordinal();
 	}
+
+	public static final String DEFAULT_LAYOUT = "%dt{yyyy-MM-dd HH:mm:ss.SSS} %lv [%ti, %li]: %pi,%sq %ms\"";
 }
