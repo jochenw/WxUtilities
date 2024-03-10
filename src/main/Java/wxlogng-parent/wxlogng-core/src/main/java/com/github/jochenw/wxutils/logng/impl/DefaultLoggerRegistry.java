@@ -141,6 +141,12 @@ public class DefaultLoggerRegistry implements ILoggerRegistry, IComponentFactory
 	}
 
 	protected void log(Throwable pTh) {
+		/* In general, we try to create the event data as late as possible,
+		 * meaning in the respective method.
+		 * The thread name, however, is an exception, because the
+		 * thread calling the event methods might be different than
+		 * the current.
+		 */
 		final ILogEvent event = new ILogEvent() {
 			@Override
 			public String getSvcId() {
@@ -174,15 +180,6 @@ public class DefaultLoggerRegistry implements ILoggerRegistry, IComponentFactory
 			@Override
 			public Level getLevel() {
 				return Level.error;
-			}
-
-			private ZonedDateTime dateTime;
-			@Override
-			public ZonedDateTime getDateTime() {
-				if (dateTime == null) {
-					dateTime = ZonedDateTime.now();
-				}
-				return dateTime;
 			}
 		};
 		log(event);

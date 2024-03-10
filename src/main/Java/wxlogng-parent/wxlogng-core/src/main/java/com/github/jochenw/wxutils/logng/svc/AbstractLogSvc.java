@@ -56,11 +56,6 @@ public abstract class AbstractLogSvc extends IIsSvc {
 			public String getMsg() {
 				return pMsg;
 			}
-
-			@Override
-			public ZonedDateTime getDateTime() {
-				return ZonedDateTime.now();
-			}
 		};
 	}
 

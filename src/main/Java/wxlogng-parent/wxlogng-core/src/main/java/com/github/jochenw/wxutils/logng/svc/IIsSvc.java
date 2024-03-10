@@ -2,8 +2,6 @@ package com.github.jochenw.wxutils.logng.svc;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.time.ZonedDateTime;
-import java.util.function.Consumer;
 
 import com.github.jochenw.afw.core.util.Exceptions;
 import com.github.jochenw.afw.di.api.IComponentFactory;
@@ -29,6 +27,10 @@ public abstract class IIsSvc implements IComponentFactoryAware {
 	public void init(IComponentFactory pFactory) throws Exception {
 		componentFactory = pFactory;
 		isFacade = componentFactory.requireInstance(IIsFacade.class);
+	}
+
+	protected Object[] result(Object... pOutput) {
+		return pOutput;
 	}
 
 	public IComponentFactory getComponentFactory() { return componentFactory; }
@@ -128,11 +130,6 @@ public abstract class IIsSvc implements IComponentFactoryAware {
 			@Override
 			public Level getLevel() {
 				return Level.info;
-			}
-
-			@Override
-			public ZonedDateTime getDateTime() {
-				return ZonedDateTime.now();
 			}
 		};
 		getComponentFactory().requireInstance(ILoggerRegistry.class).log(evt);

@@ -9,6 +9,7 @@ public interface IIsFacade {
 	public String getCallingPkgId();
 	public String getCallingSvcId();
 	public String getCallingQSvcId();
+	public boolean hasDir(String pRelativePath);
 	public boolean hasFile(String pRelativePath);
 	public InputStream read(String pRelativePath);
 	public String[] findFilesInDir(String pRelativePath);

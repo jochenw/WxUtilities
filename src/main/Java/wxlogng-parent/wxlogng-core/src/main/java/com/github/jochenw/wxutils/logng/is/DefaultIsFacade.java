@@ -67,6 +67,11 @@ public class DefaultIsFacade implements IIsFacade {
 	}
 
 	@Override
+	public boolean hasDir(String pRelativePath) {
+		return Files.isDirectory(Paths.get(pRelativePath));
+	}
+
+	@Override
 	public boolean hasFile(String pRelativePath) {
 		return Files.isRegularFile(Paths.get(pRelativePath));
 	}
