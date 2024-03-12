@@ -15,6 +15,9 @@ import com.github.jochenw.afw.di.api.Application;
 import com.github.jochenw.afw.di.api.IComponentFactory;
 import com.github.jochenw.wxutils.logng.app.IIsFacade;
 import com.github.jochenw.wxutils.logng.app.WxLogNg;
+import com.github.jochenw.wxutis.logng.api.ILogEvent;
+import com.github.jochenw.wxutis.logng.api.ILoggerRegistry;
+import com.github.jochenw.wxutis.logng.api.ILogEvent.Level;
 import com.softwareag.util.IDataMap;
 import com.wm.data.IData;
 import com.wm.data.IDataFactory;
@@ -38,31 +41,26 @@ public class AdminStartUpSvcTest {
 
 		@Override
 		public String getCurrentSvcId() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public String getCurrentQSvcId() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public String getCallingPkgId() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public String getCallingSvcId() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public String getCallingQSvcId() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
@@ -70,6 +68,22 @@ public class AdminStartUpSvcTest {
 		public boolean hasFile(String pRelativePath) {
 			final String path = canonicalize(pRelativePath);
 			return files.containsKey(path);
+		}
+
+		@Override
+		public boolean hasDir(String pRelativePath) {
+			final String relativePath;
+			if (pRelativePath.endsWith("/")) {
+				relativePath = canonicalize(pRelativePath);
+			} else {
+				relativePath = canonicalize(pRelativePath) + "/";
+			}
+			for (String filePath : files.keySet()) {
+				if (filePath.startsWith(relativePath)) {
+					return true;
+				}
+			}
+			return false;
 		}
 
 		@Override
@@ -92,7 +106,6 @@ public class AdminStartUpSvcTest {
 		
 		@Override
 		public String[] findFilesInDir(String pRelativePath) {
-			// TODO Auto-generated method stub
 			return null;
 		}
 	}
@@ -124,5 +137,14 @@ public class AdminStartUpSvcTest {
 		final IComponentFactory cf = adminStartUpSvc.getComponentFactory();
 		assertNotNull(cf);
 		assertSame(cf.requireInstance(Application.class), WxLogNg.getInstance());
+		final ILoggerRegistry registry = cf.requireInstance(ILoggerRegistry.class);
+		registry.log(new ILogEvent() {
+			@Override public String getSvcId() { return "TheSvcId"; }
+			@Override public String getQSvcId() { return "fully.qualified.TheSvcId"; }
+			@Override public String getPkgId() { return "ThePkgId"; }
+			@Override public String getMsg() { return "The Logging Message"; }
+			@Override public String getLoggerId() { return "WxLogNg"; }
+			@Override public Level getLevel() { return Level.info; }
+		});
 	}
 }
